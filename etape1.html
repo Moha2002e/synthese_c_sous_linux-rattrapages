@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Étape 1 - Connexion/Déconnexion et Authentification</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #333;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+            background: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+        }
+
+        .section h3 {
+            color: #555;
+            margin: 20px 0 10px 0;
+            font-size: 1.4rem;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .mermaid {
+            text-align: center;
+            margin: 20px 0;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .flow-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .flow-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .flow-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .check-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .check-list li {
+            padding: 8px 0;
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .check-list li::before {
+            content: '✅';
+            position: absolute;
+            left: 0;
+        }
+
+        .structure-box {
+            background: #e8f4fd;
+            border: 1px solid #bee3f8;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .structure-box h4 {
+            color: #2b6cb0;
+            margin-bottom: 10px;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .user-journey {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .user-journey h3 {
+            color: #22543d;
+            margin-bottom: 15px;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 25px;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">← Retour</a>
+    
+    <div class="container">
+        <div class="header">
+            <h1>📋 SYNTHÈSE COMPLÈTE - ÉTAPE 1</h1>
+            <p class="subtitle">CONNEXION/DÉCONNEXION ET AUTHENTIFICATION</p>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Objectif de cette étape</h2>
+            <p>Cette étape implémente la <strong>gestion des connexions clients</strong> et l'<strong>authentification des utilisateurs</strong> dans le système maraîcher en ligne. Elle établit les fondations de la communication client-serveur.</p>
+        </div>
+
+        <div class="section">
+            <h2>🔄 Flux de communication analysé</h2>
+            
+            <h3>A) Connexion/Déconnexion d'une fenêtre</h3>
+            
+            <h4>1. Connexion initiale (CONNECT)</h4>
+            
+            <div class="mermaid">
+                sequenceDiagram
+                    participant C as Client (PID: 31195)
+                    participant S as Serveur (PID: 31165)
+                    participant T as Table Connexions
+
+                    Note over C: Lancement application
+                    C->>S: CONNECT (type=1, expediteur=31195)
+                    S->>T: Recherche ligne vide
+                    T-->>S: Ligne 0 disponible
+                    S->>T: tab[0].pidFenetre = 31195
+                    Note over S: Affichage table mise à jour
+            </div>
+
+            <div class="code-block">
+// Client - Envoi CONNECT
+requete = constructeurRequete(3, 1, getpid(), CONNECT, 0,nullptr,nullptr,nullptr,0.0);
+msgsnd(idQ, &requete, sizeof(MESSAGE) - sizeof(long), 0);
+
+// Serveur - Traitement CONNECT
+case CONNECT:
+    utilisationTableConnexions(&m, &reponse);
+    // Dans utilisationTableConnexions:
+    if(tab->connexions[i].pidFenetre == 0) {
+        tab->connexions[i].pidFenetre = pM->expediteur;
+    }
+            </div>
+
+            <h4>2. Authentification (LOGIN)</h4>
+            
+            <div class="mermaid">
+                sequenceDiagram
+                    participant C as Client
+                    participant S as Serveur
+                    participant FC as FichierClient
+                    participant T as Table Connexions
+                    participant Ca as Caddie
+
+                    C->>S: LOGIN (data1=0, data2="wagner", data3="123")
+                    S->>FC: estPresent("wagner")
+                    FC-->>S: position = 2
+                    S->>FC: verifieMotDePasse(2, "123")
+                    FC-->>S: true
+                    S->>T: tab[i].nom = "wagner"
+                    S->>Ca: Création processus Caddie
+                    S->>C: Réponse LOGIN (data1=1, data4="Re-bonjour...")
+                    S->>C: SIGUSR1
+            </div>
+
+            <div class="code-block">
+// Serveur - Traitement LOGIN
+case LOGIN:
+    login(&m, &reponse);
+    envoiRequete(&reponse);
+    envoiSignal(reponse.type, SIGUSR1);
+
+// Fonction login()
+if(pM->data1 == 0) { // Client existant
+    int position = estPresent(pM->data2);
+    if(position > 0 && verifieMotDePasse(position, pM->data3)) {
+        reponseLOGIN(pReponse, 1, LOGIN, "---Re-bonjour cher client !---");
+        utilisationTableConnexions(pM, pReponse);
+    }
+}
+            </div>
+
+            <h4>3. Déconnexion (DECONNECT/LOGOUT)</h4>
+            
+            <div class="mermaid">
+                sequenceDiagram
+                    participant C as Client
+                    participant S as Serveur
+                    participant T as Table Connexions
+                    participant Ca as Caddie
+
+                    Note over C: Clic sur croix (fermeture)
+                    C->>S: LOGOUT (si utilisateur connecté)
+                    S->>Ca: LOGOUT
+                    S->>T: tab[i].nom = ""
+                    C->>S: DECONNECT
+                    S->>T: tab[i].pidFenetre = 0
+                    Note over C: Terminaison processus
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔍 ANALYSE COMPARATIVE : SPÉCIFICATION vs IMPLÉMENTATION</h2>
+            
+            <h3>✅ Points conformes à la spécification</h3>
+            <ul class="check-list">
+                <li><strong>Connexion initiale</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>Envoi CONNECT avant affichage fenêtre</li>
+                        <li>Recherche ligne vide dans table connexions</li>
+                        <li>Enregistrement PID fenêtre</li>
+                    </ul>
+                </li>
+                <li><strong>Authentification</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>Utilisation module FichierClient</li>
+                        <li>Gestion nouveaux clients vs existants</li>
+                        <li>Création processus Caddie après login réussi</li>
+                        <li>Envoi SIGUSR1 pour notification</li>
+                    </ul>
+                </li>
+                <li><strong>Déconnexion</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>LOGOUT avant DECONNECT si utilisateur connecté</li>
+                        <li>Nettoyage table connexions</li>
+                        <li>Terminaison processus</li>
+                    </ul>
+                </li>
+                <li><strong>Gestion des signaux</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>Handler SIGINT pour nettoyage ressources</li>
+                        <li>Handler SIGCHLD pour gestion processus fils</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Détails d'implémentation notables</h2>
+            
+            <h3>Structure de données</h3>
+            <div class="code-block">
+typedef struct {
+    int   pidFenetre;    // PID de la fenêtre client
+    char  nom[20];       // Nom de l'utilisateur connecté
+    int   pidCaddie;     // PID du processus caddie associé
+} CONNEXION;
+
+typedef struct {
+    int   pidServeur;
+    int   pidPublicite;
+    int   pidAccesBD;
+    CONNEXION connexions[6];  // Maximum 6 clients simultanés
+} TAB_CONNEXIONS;
+            </div>
+
+            <h3>Gestion des erreurs</h3>
+            <div class="code-block">
+// Vérification présence utilisateur
+int estPresent(const char* nom) {
+    // Retourne position (1,2,3...) si trouvé
+    // Retourne 0 si non trouvé
+    // Retourne -1 si erreur
+}
+
+// Vérification mot de passe
+int verifieMotDePasse(int pos, const char* motDePasse) {
+    // Retourne 1 si correct, 0 sinon, -1 si erreur
+}
+            </div>
+
+            <h3>Création processus Caddie</h3>
+            <div class="code-block">
+// Après login réussi
+sprintf(buffer, "%d", fdPipe[1]);
+tab->connexions[i].pidCaddie = creerProcessusFils(2,"./Caddie", "Caddie", buffer,NULL);
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📈 PARCOURS UTILISATEUR COMPLET</h2>
+            
+            <div class="user-journey">
+                <h3>1. Lancement et connexion</h3>
+                <ul class="flow-list">
+                    <li>Utilisateur lance ./Client</li>
+                    <li>Application envoie CONNECT au serveur</li>
+                    <li>Serveur enregistre PID dans table connexions</li>
+                    <li>Fenêtre client s'affiche</li>
+                </ul>
+            </div>
+
+            <div class="user-journey">
+                <h3>2. Authentification</h3>
+                <ul class="flow-list">
+                    <li>Utilisateur saisit nom/mot de passe</li>
+                    <li>Clic sur "Login"</li>
+                    <li>Envoi LOGIN au serveur</li>
+                    <li>Serveur vérifie dans clients.dat</li>
+                    <li>Si OK : création processus Caddie + réponse positive</li>
+                    <li>Si KO : réponse négative avec message d'erreur</li>
+                    <li>Interface se met à jour (loginOK() ou message d'erreur)</li>
+                </ul>
+            </div>
+
+            <div class="user-journey">
+                <h3>3. Déconnexion</h3>
+                <ul class="flow-list">
+                    <li>Clic sur "Logout" ou croix de fenêtre</li>
+                    <li>Si utilisateur connecté : envoi LOGOUT</li>
+                    <li>Serveur nettoie table connexions</li>
+                    <li>Envoi DECONNECT</li>
+                    <li>Terminaison processus client</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 SYNTHÈSE FINALE</h2>
+            <div class="highlight">
+                <p>Cette étape établit les <strong>fondations de la communication client-serveur</strong> avec :</p>
+                <ul class="check-list">
+                    <li><strong>Gestion des connexions</strong> : Enregistrement/désinscription des clients</li>
+                    <li><strong>Authentification robuste</strong> : Vérification utilisateurs existants/nouveaux</li>
+                    <li><strong>Architecture multi-processus</strong> : Création dynamique des caddies</li>
+                    <li><strong>Gestion des ressources</strong> : Nettoyage propre à la fermeture</li>
+                    <li><strong>Interface utilisateur</strong> : États connecté/déconnecté bien définis</li>
+                </ul>
+                <p>Le code implémente fidèlement la spécification avec une <strong>architecture robuste</strong> permettant la gestion de <strong>6 clients simultanés</strong> maximum, chaque client ayant son propre processus caddie dédié.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html> 
