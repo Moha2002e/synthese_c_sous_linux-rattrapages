@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Étape 2 - Affichage de la publicité dans les fenêtres connectées</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #333;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+            background: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+        }
+
+        .section h3 {
+            color: #555;
+            margin: 20px 0 10px 0;
+            font-size: 1.4rem;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .mermaid {
+            text-align: center;
+            margin: 20px 0;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .flow-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .flow-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .flow-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .check-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .check-list li {
+            padding: 8px 0;
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .check-list li::before {
+            content: '✅';
+            position: absolute;
+            left: 0;
+        }
+
+        .structure-box {
+            background: #e8f4fd;
+            border: 1px solid #bee3f8;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .structure-box h4 {
+            color: #2b6cb0;
+            margin-bottom: 10px;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .user-journey {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .user-journey h3 {
+            color: #22543d;
+            margin-bottom: 15px;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 25px;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">← Retour</a>
+    
+    <div class="container">
+        <div class="header">
+            <h1>📋 SYNTHÈSE COMPLÈTE - ÉTAPE 3</h1>
+            <p class="subtitle">AFFICHAGE DE LA PUBLICITÉ DANS LES FENÊTRES CONNECTÉES</p>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Objectif de cette étape</h2>
+            <p>Cette étape implémente l'<strong>affichage de publicités</strong> dans les fenêtres client connectées. Elle met en place un système de diffusion de publicités en temps réel vers tous les clients connectés.</p>
+        </div>
+
+        <div class="section">
+            <h2>🔄 Architecture du système publicitaire</h2>
+            
+            <h3>A) Schéma global du système</h3>
+            
+            <div class="mermaid">
+                graph TB
+                    P[Processus Publicité] --> S[Serveur]
+                    S --> C1[Client 1]
+                    S --> C2[Client 2]
+                    S --> C3[Client 3]
+                    
+                    subgraph "Communication"
+                        P -.->|PUBLICITE| S
+                        S -.->|PUBLICITE| C1
+                        S -.->|PUBLICITE| C2
+                        S -.->|PUBLICITE| C3
+                        S -.->|SIGUSR1| C1
+                        S -.->|SIGUSR1| C2
+                        S -.->|SIGUSR1| C3
+                    end
+                    
+                    subgraph "Gestion processus"
+                        S -->|fork/exec| P
+                        S -->|SIGCHLD| S
+                    end
+            </div>
+
+            <h3>B) Création du processus Publicité</h3>
+            
+            <div class="mermaid">
+                sequenceDiagram
+                    participant S as Serveur
+                    participant P as Processus Publicité
+                    participant T as Table Connexions
+
+                    Note over S: Démarrage serveur
+                    S->>P: fork() + exec("./Publicite")
+                    S->>T: tab->pidPublicite = PID_Publicite
+                    Note over P: Boucle infinie d'affichage
+                    P->>S: PUBLICITE (data2="message")
+                    S->>S: Broadcast vers tous clients
+                    S->>S: SIGUSR1 vers chaque client
+            </div>
+
+            <div class="code-block">
+```cpp
+// Serveur – Création processus Publicité
+// --------------------------------------
+tab->pidPublicite = creerProcessusFils(
+    1, "./Publicite", "Publicite", NULL, NULL
+);
+
+// Processus Publicité – Boucle d'affichage
+// ----------------------------------------
+while(1) {
+    // Affichage publicité
+    requete = constructeurRequete(
+        3, 1, getpid(), PUBLICITE, 0, "PUBLICITE", nullptr, nullptr, 0.0
+    );
+    msgsnd(idQ, &requete, sizeof(MESSAGE) - sizeof(long), 0);
+    sleep(10); // Attente 10 secondes
+}
+```
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 ANALYSE DU CODE IMPLÉMENTÉ</h2>
+            
+            <h3>1. Création du processus Publicité dans le serveur</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant S as Serveur
+    participant P as Processus Publicité
+    participant T as Table Connexions
+
+    S->>S: initialisation()
+    S->>P: fork() + exec("./Publicite")
+    S->>T: tab->pidPublicite = PID_Publicite
+    Note over P: Boucle d'envoi de publicités
+</div>
+            <div class="code-block">
+// Serveur.cpp - Initialisation
+void initialisation() {
+    // ... autres initialisations ...
+    
+    // Création du processus publicité
+    tab->pidPublicite = creerProcessusFils(1,"./Publicite", "Publicite", NULL, NULL);
+    printf("(SERVEUR) Processus publicité créé avec PID %d\n", tab->pidPublicite);
+}
+
+// Fonction creerProcessusFils
+int creerProcessusFils(int nbParametres, char* nomProg, char* nomParametre, char* parametre1, char* parametre2) {
+    int pid = fork();
+    if(pid == 0) {
+        if(nbParametres == 1) {
+            execl(nomProg, nomParametre, NULL);
+        } else if(nbParametres == 2) {
+            execl(nomProg, nomParametre, parametre1, NULL);
+        }
+        exit(1);
+    }
+    return pid;
+}
+            </div>
+
+            <h3>2. Processus Publicité - Diffusion des publicités</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant P as Processus Publicité
+    participant Q as File de messages
+
+    loop Toutes les 10 secondes
+        P->>Q: msgsnd(PUBLICITE)
+        P->>P: printf("Publicité envoyée")
+    end
+</div>
+            <div class="code-block">
+// Publicite.cpp - Boucle principale
+int main() {
+    // Connexion à la file de messages
+    idQ = msgget(CLE, 0);
+    
+    while(1) {
+        // Construction et envoi de la publicité
+        requete = constructeurRequete(3, 1, getpid(), PUBLICITE, 0, "PUBLICITE", nullptr, nullptr, 0.0);
+        msgsnd(idQ, &requete, sizeof(MESSAGE) - sizeof(long), 0);
+        
+        printf("(PUBLICITE) Publicité envoyée\n");
+        sleep(10);  // Attente 10 secondes
+    }
+    
+    return 0;
+}
+            </div>
+
+            <h3>3. Serveur - Traitement et diffusion des publicités</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant Q as File de messages
+    participant S as Serveur
+    participant C1 as Client 1
+    participant C2 as Client 2
+    participant C3 as Client 3
+
+    Q->>S: Réception PUBLICITE
+    S->>C1: envoiRequete(PUBLICITE)
+    S->>C1: envoiSignal(SIGUSR1)
+    S->>C2: envoiRequete(PUBLICITE)
+    S->>C2: envoiSignal(SIGUSR1)
+    S->>C3: envoiRequete(PUBLICITE)
+    S->>C3: envoiSignal(SIGUSR1)
+</div>
+            <div class="code-block">
+// Serveur.cpp - Traitement PUBLICITE
+case PUBLICITE:
+    printf("(SERVEUR) Requete PUBLICITE reçue de %d\n", pM->expediteur);
+    
+    // Broadcast vers tous les clients connectés
+    for(int i = 0; i < 6; i++) {
+        if(tab->connexions[i].pidFenetre != 0) {
+            pReponse->requete = PUBLICITE;
+            pReponse->type = tab->connexions[i].pidFenetre;
+            pReponse->data2 = pM->data2;  // Message publicitaire
+            envoiRequete(pReponse);
+            envoiSignal(pReponse->type, SIGUSR1);
+        }
+    }
+    break;
+            </div>
+
+            <h3>4. Client - Réception et affichage des publicités</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant S as Serveur
+    participant C as Client
+
+    S->>C: Signal SIGUSR1 + Message PUBLICITE
+    C->>C: handlerSIGUSR1()
+    C->>C: dialogueMessage("PUBLICITE", m.data2)
+</div>
+            <div class="code-block">
+// windowclient.cpp - Handler SIGUSR1
+void handlerSIGUSR1(int sig) {
+    MESSAGE m;
+    msgrcv(idQ, &m, sizeof(MESSAGE) - sizeof(long), getpid(), 0);
+    
+    switch(m.requete) {
+        case PUBLICITE:
+            w->dialogueMessage("PUBLICITE", m.data2);
+            break;
+        // ... autres cas ...
+    }
+}
+
+// Interface - Affichage dialogue
+void WindowClient::dialogueMessage(const char* titre, const char* message) {
+    QMessageBox::information(this, titre, message);
+}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔍 ANALYSE COMPARATIVE : SPÉCIFICATION vs IMPLÉMENTATION</h2>
+            
+            <h3>✅ Points conformes à la spécification</h3>
+            <ul class="check-list">
+                <li><strong>Création processus Publicité</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>Création lors du démarrage du serveur</li>
+                        <li>Stockage PID dans table connexions</li>
+                        <li>Processus indépendant et autonome</li>
+                    </ul>
+                </li>
+                <li><strong>Diffusion automatique</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>Boucle infinie avec sleep(10)</li>
+                        <li>Envoi périodique de publicités</li>
+                        <li>Message "PUBLICITE" standardisé</li>
+                    </ul>
+                </li>
+                <li><strong>Broadcast vers clients</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>Diffusion vers tous les clients connectés</li>
+                        <li>Vérification pidFenetre != 0</li>
+                        <li>Envoi SIGUSR1 pour notification</li>
+                    </ul>
+                </li>
+                <li><strong>Affichage côté client</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>Handler SIGUSR1 pour réception</li>
+                        <li>Dialogue modal avec QMessageBox</li>
+                        <li>Affichage du message publicitaire</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Détails d'implémentation notables</h2>
+            
+            <h3>Structure de données</h3>
+            <div class="code-block">
+typedef struct {
+    int   pidServeur;
+    int   pidPublicite;    // PID du processus publicité
+    int   pidAccesBD;
+    CONNEXION connexions[6];
+} TAB_CONNEXIONS;
+            </div>
+
+            <h3>Gestion des signaux</h3>
+            <div class="code-block">
+// Client - Armement du signal
+signal(SIGUSR1, handlerSIGUSR1);
+
+// Serveur - Envoi signal
+void envoiSignal(int pid, int sig) {
+    kill(pid, sig);
+}
+            </div>
+
+            <h3>Broadcast intelligent</h3>
+            <div class="code-block">
+// Vérification clients connectés
+for(int i = 0; i < 6; i++) {
+    if(tab->connexions[i].pidFenetre != 0) {
+        // Client connecté, envoi publicité
+        pReponse->type = tab->connexions[i].pidFenetre;
+        envoiRequete(pReponse);
+        envoiSignal(pReponse->type, SIGUSR1);
+    }
+}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📈 PARCOURS UTILISATEUR COMPLET</h2>
+            
+            <div class="user-journey">
+                <h3>1. Démarrage du système</h3>
+                <ul class="flow-list">
+                    <li>Serveur démarre et initialise le système</li>
+                    <li>Création du processus Publicité</li>
+                    <li>Enregistrement PID dans table connexions</li>
+                    <li>Processus Publicité entre en boucle d'affichage</li>
+                </ul>
+            </div>
+
+            <div class="user-journey">
+                <h3>2. Connexion d'un client</h3>
+                <ul class="flow-list">
+                    <li>Client se connecte (CONNECT)</li>
+                    <li>Enregistrement dans table connexions</li>
+                    <li>Client devient destinataire des publicités</li>
+                </ul>
+            </div>
+
+            <div class="user-journey">
+                <h3>3. Diffusion d'une publicité</h3>
+                <ul class="flow-list">
+                    <li>Processus Publicité envoie PUBLICITE</li>
+                    <li>Serveur reçoit et diffuse vers tous clients</li>
+                    <li>Envoi SIGUSR1 à chaque client</li>
+                    <li>Clients affichent dialogue publicitaire</li>
+                    <li>Attente 10 secondes avant prochaine publicité</li>
+                </ul>
+            </div>
+
+            <div class="user-journey">
+                <h3>4. Déconnexion d'un client</h3>
+                <ul class="flow-list">
+                    <li>Client se déconnecte (DECONNECT)</li>
+                    <li>Suppression de la table connexions</li>
+                    <li>Client ne reçoit plus de publicités</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 SYNTHÈSE FINALE</h2>
+            <div class="highlight">
+                <p>Cette étape met en place un <strong>système de diffusion publicitaire</strong> avec :</p>
+                <ul class="check-list">
+                    <li><strong>Processus dédié</strong> : Processus Publicité autonome et indépendant</li>
+                    <li><strong>Diffusion automatique</strong> : Envoi périodique toutes les 10 secondes</li>
+                    <li><strong>Broadcast intelligent</strong> : Diffusion uniquement vers clients connectés</li>
+                    <li><strong>Communication asynchrone</strong> : Utilisation des signaux SIGUSR1</li>
+                    <li><strong>Interface utilisateur</strong> : Affichage modal des publicités</li>
+                    <li><strong>Gestion dynamique</strong> : Ajout/suppression automatique des destinataires</li>
+                </ul>
+                <p>Le système permet une <strong>diffusion en temps réel</strong> des publicités vers tous les clients connectés, avec une <strong>architecture robuste</strong> basée sur les processus et les signaux Unix.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html> 

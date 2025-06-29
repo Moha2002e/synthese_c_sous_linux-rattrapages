@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Étape 5 - Achats d'articles et mise à jour du panier</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header { text-align: center; margin-bottom: 40px; color: #333; }
+        .header h1 { font-size: 2.5rem; margin-bottom: 10px; color: #667eea; }
+        .header .subtitle { font-size: 1.2rem; color: #666; }
+        .back-button {
+            position: fixed; top: 20px; left: 20px;
+            background: #667eea; color: white; padding: 10px 20px;
+            border-radius: 25px; text-decoration: none; font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .back-button:hover { background: #5a6fd8; transform: translateY(-2px); }
+        .section {
+            margin-bottom: 40px; padding: 20px;
+            border-left: 4px solid #667eea; background: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+        }
+        .section h2 { color: #333; margin-bottom: 15px; font-size: 1.8rem; }
+        .section h3 { color: #555; margin: 20px 0 10px 0; font-size: 1.4rem; }
+        .code-block {
+            background: #2d3748; color: #e2e8f0; padding: 20px;
+            border-radius: 8px; overflow-x: auto; margin: 15px 0;
+            font-family: 'Courier New', monospace; font-size: 0.95rem;
+        }
+        .mermaid {
+            text-align: center; margin: 20px 0; background: white;
+            padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;
+        }
+        .flow-list, .check-list { list-style: none; padding-left: 0; }
+        .flow-list li, .check-list li {
+            padding: 8px 0; border-bottom: 1px solid #e2e8f0;
+            position: relative; padding-left: 30px;
+        }
+        .flow-list li::before { content: '→'; position: absolute; left: 0; color: #667eea; font-weight: bold; }
+        .check-list li::before { content: '✅'; position: absolute; left: 0; }
+        .structure-box {
+            background: #e8f4fd; border: 1px solid #bee3f8;
+            border-radius: 8px; padding: 15px; margin: 15px 0;
+        }
+        .structure-box h4 { color: #2b6cb0; margin-bottom: 10px; }
+        .highlight {
+            background: #fff3cd; border: 1px solid #ffeaa7;
+            border-radius: 4px; padding: 10px; margin: 10px 0;
+        }
+        .user-journey {
+            background: #f0fff4; border: 1px solid #9ae6b4;
+            border-radius: 8px; padding: 20px; margin: 20px 0;
+        }
+        .user-journey h3 { color: #22543d; margin-bottom: 15px; }
+        .step-number {
+            display: inline-block; background: #667eea; color: white;
+            width: 25px; height: 25px; border-radius: 50%; text-align: center;
+            line-height: 25px; margin-right: 10px; font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">← Retour</a>
+    <div class="container">
+        <div class="header">
+            <h1>📋 SYNTHÈSE COMPLÈTE - ÉTAPE 5</h1>
+            <p class="subtitle">ACHATS D'ARTICLES ET MISE À JOUR DU PANIER</p>
+        </div>
+        <div class="section">
+            <h2>🎯 Objectif de cette étape</h2>
+            <p>Cette étape implémente le <strong>système d'achat d'articles</strong> et la <strong>gestion du panier client</strong>. Elle permet aux clients d'acheter des articles, de mettre à jour les stocks en base de données, et de visualiser leur panier d'achat.</p>
+        </div>
+        <div class="section">
+            <h2>🔄 Architecture du système d'achat</h2>
+            <h3>Schéma global du système</h3>
+            <div class="mermaid">
+graph TB
+    C[Client] --> S[Serveur]
+    S --> Ca[Caddie]
+    Ca --> P[Pipe]
+    P --> AB[AccesBD]
+    AB --> BD[Base de données MySQL]
+    Ca --> V[Vecteur articles]
+    Ca --> T[Table Panier]
+    T --> TC[totalCaddie]
+    C -.->|ACHAT| S
+    S -.->|ACHAT| Ca
+    Ca -.->|ACHAT via pipe| AB
+    AB -.->|UPDATE stock| BD
+    AB -.->|Réponse| Ca
+    Ca -.->|Résultat| C
+    C -.->|CADDIE| S
+    S -.->|CADDIE| Ca
+    Ca -.->|Articles| C
+</div>
+        </div>
+        <div class="section">
+            <h2>📊 ANALYSE DU CODE IMPLÉMENTÉ</h2>
+            <h3>1. Client - Envoi requête ACHAT</h3>
+            <div class="code-block">
+```cpp
+// Client - Envoi ACHAT
+void WindowClient::on_pushButtonAcheter_clicked() {
+    char tmp[5];
+    sprintf(tmp, "%d", getQuantite());
+    requete = constructeurRequete(5, 1, getpid(), ACHAT, articleEnCours.id, tmp, nullptr, nullptr, 0.0);
+    msgsnd(idQ, &requete, sizeof(MESSAGE) - sizeof(long), 0);
+}
+```
+            </div>
+            <h3>2. Client - Réception réponse ACHAT et envoi CADDIE</h3>
+            <div class="code-block">
+```cpp
+// Client - Réception résultat
+void receptionArticle(MESSAGE* m) {
+    int tmp = atoi(m->data3);
+    if (tmp == 0) {
+        w->dialogueMessage("Achat", "Stock insuffisant !");
+    } else {
+        sprintf(tmpbuffer,"%d unité de %s acheté avec succés", tmp, articleEnCours.intitule);
+        w->dialogueMessage("Achat", tmpbuffer);
+        // Envoi CADDIE pour mise à jour panier
+        requete = constructeurRequete(3, 1, getpid(), CADDIE,0,nullptr,nullptr,nullptr,0.0);
+        msgsnd(idQ, &requete, sizeof(MESSAGE) - sizeof(long), 0);
+        w->videTablePanier();
+        totalCaddie = 0.0;
+    }
+}
+```
+            </div>
+            <h3>3. Caddie - Gestion des requêtes ACHAT et CADDIE</h3>
+            <div class="code-block">
+```cpp
+// Caddie - Stockage article
+void stockeArticle(MESSAGE* pM) {
+    if(atoi(pM->data3) != 0) {  // Achat réussi
+        if (nbArticles >= 10) {
+            fprintf(stderr, "Erreur : le tableau d'articles est plein.\n");
+            exit(1);
+        }
+        articles[nbArticles].id = pM->data1;
+        strcpy(articles[nbArticles].intitule, pM->data2);
+        articles[nbArticles].prix = pM->data5;
+        articles[nbArticles].stock = atoi(pM->data3);
+        strcpy(articles[nbArticles].image, pM->data4);
+        nbArticles++;
+    }
+}
+```
+            </div>
+            <h3>4. AccesBD - Traitement requête ACHAT</h3>
+            <div class="code-block">
+```cpp
+// AccesBD - Gestion achat
+int requeteAchatArticle(int id, int quantite) {
+    ARTICLE tmp = requeteSqlArticle(id);
+    int articlesDecrementes = 0;
+    if (tmp.stock >= quantite) {
+        int nouveauStock = tmp.stock - quantite;
+        sprintf(requete, "UPDATE UNIX_FINAL SET stock = %d WHERE id = %d;", nouveauStock, id);
+        if (mysql_query(connexion, requete) != 0) {
+            fprintf(stderr, "Erreur de mise à jour du stock: %s\n", mysql_error(connexion));
+            return 0;
+        }
+        articlesDecrementes = quantite;
+    }
+    return articlesDecrementes;
+}
+```
+            </div>
+        </div>
+        <div class="section">
+            <h2>📊 SCHÉMAS DE COMMUNICATION DÉTAILLÉS</h2>
+            <h3>1. Flux d'achat complet</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant C as Client
+    participant S as Serveur
+    participant Ca as Caddie
+    participant P as Pipe
+    participant AB as AccesBD
+    participant BD as Base de données
+
+    Note over C: Clic bouton "Acheter"
+    C->>S: ACHAT (data1=id, data2=quantité)
+    S->>Ca: ACHAT (data1=id, data2=quantité)
+    Ca->>P: write(ACHAT)
+    P->>AB: read(ACHAT)
+    AB->>BD: SELECT stock FROM UNIX_FINAL WHERE id=X
+    BD-->>AB: stock actuel
+    alt Stock suffisant
+        AB->>BD: UPDATE stock = stock - quantité
+        BD-->>AB: OK
+        AB->>AB: articlesDecrementes = quantité
+    else Stock insuffisant
+        AB->>AB: articlesDecrementes = 0
+    end
+    AB->>Ca: Réponse ACHAT (data3=articlesDecrementes)
+    Ca->>Ca: stockeArticle() si articlesDecrementes > 0
+    Ca->>C: Résultat achat
+    Ca->>C: SIGUSR1
+    alt Achat réussi
+        C->>C: Affichage message succès
+        C->>S: CADDIE
+        S->>Ca: CADDIE
+        Ca->>C: Articles du vecteur (boucle)
+        Ca->>C: SIGUSR1 (pour chaque article)
+        C->>C: Mise à jour table panier
+    else Échec achat
+        C->>C: Affichage "Stock insuffisant"
+    end
+</div>
+            <div class="code-block">
+```cpp
+// Client - Envoi ACHAT
+void WindowClient::on_pushButtonAcheter_clicked() {
+    char tmp[5];
+    sprintf(tmp, "%d", getQuantite());
+    requete = constructeurRequete(5, 1, getpid(), ACHAT, articleEnCours.id, tmp, nullptr, nullptr, 0.0);
+    msgsnd(idQ, &requete, sizeof(MESSAGE) - sizeof(long), 0);
+}
+// Client - Réception résultat
+void receptionArticle(MESSAGE* m) {
+    int tmp = atoi(m->data3);
+    if (tmp == 0) {
+        w->dialogueMessage("Achat", "Stock insuffisant !");
+    } else {
+        sprintf(tmpbuffer,"%d unité de %s acheté avec succés", tmp, articleEnCours.intitule);
+        w->dialogueMessage("Achat", tmpbuffer);
+        // Envoi CADDIE pour mise à jour panier
+        requete = constructeurRequete(3, 1, getpid(), CADDIE,0,nullptr,nullptr,nullptr,0.0);
+        msgsnd(idQ, &requete, sizeof(MESSAGE) - sizeof(long), 0);
+        w->videTablePanier();
+        totalCaddie = 0.0;
+    }
+}
+```
+            </div>
+            <h3>2. Stockage d'article dans le Caddie</h3>
+            <div class="mermaid">
+graph LR
+    A[Réponse AccesBD] --> B{data3 > 0 ?}
+    B -->|Oui| C[stockeArticle]
+    B -->|Non| D[Pas de stockage]
+    C --> E[Vérification nbArticles < 10]
+    E -->|Oui| F[Ajout dans articles[nbArticles]]
+    E -->|Non| G[Erreur: tableau plein]
+    F --> H[nbArticles++]
+    H --> I[Article stocké]
+    subgraph "Structure Caddie"
+        J[ARTICLE articles[10]]
+        K[int nbArticles]
+    end
+</div>
+            <div class="code-block">
+```cpp
+// Caddie - Stockage article
+void stockeArticle(MESSAGE* pM) {
+    if(atoi(pM->data3) != 0) {  // Achat réussi
+        if (nbArticles >= 10) {
+            fprintf(stderr, "Erreur : le tableau d'articles est plein.\n");
+            exit(1);
+        }
+        articles[nbArticles].id = pM->data1;
+        strcpy(articles[nbArticles].intitule, pM->data2);
+        articles[nbArticles].prix = pM->data5;
+        articles[nbArticles].stock = atoi(pM->data3);
+        strcpy(articles[nbArticles].image, pM->data4);
+        nbArticles++;
+    }
+}
+```
+            </div>
+            <h3>3. Mise à jour du panier client</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant C as Client
+    participant S as Serveur
+    participant Ca as Caddie
+
+    C->>S: CADDIE
+    S->>Ca: CADDIE
+    Ca->>Ca: envoiArticleVecteur()
+    loop Pour chaque article du vecteur
+        Ca->>C: Article (data1=id, data2=intitule, data3=quantité, data5=prix)
+        Ca->>C: SIGUSR1
+        C->>C: ajouteArticleTablePanier()
+        C->>C: totalCaddie += prix * quantité
+        C->>C: setTotal(totalCaddie)
+    end
+</div>
+            <div class="code-block">
+```cpp
+// Caddie - Envoi articles du panier
+void envoiArticleVecteur(MESSAGE* pM) {
+    for(int i = 0; i < nbArticles; i++) {
+        pM->type = pidClient;
+        pM->expediteur = getpid();
+        pM->data1 = articles[i].id;
+        strcpy(pM->data2, articles[i].intitule);
+        pM->data5 = articles[i].prix;
+        sprintf(pM->data3, "%d", articles[i].stock);
+        strcpy(pM->data4, articles[i].image);
+        msgsnd(idQ, pM, sizeof(MESSAGE) - sizeof(long), 0);
+        kill(pidClient, SIGUSR1);
+    }
+}
+// Client - Réception articles panier
+case CADDIE:
+    w->ajouteArticleTablePanier(m.data2, m.data5, atoi(m.data3));
+    totalCaddie = totalCaddie + (m.data5 * atoi(m.data3));
+    w->setTotal(totalCaddie);
+    break;
+```
+            </div>
+            <h3>4. Gestion des stocks en base de données</h3>
+            <div class="mermaid">
+graph TD
+    A[Requête ACHAT] --> B[requeteSqlArticle]
+    B --> C[SELECT stock FROM UNIX_FINAL]
+    C --> D{stock >= quantité ?}
+    D -->|Oui| E[UPDATE stock = stock - quantité]
+    D -->|Non| F[Pas de modification]
+    E --> G[articlesDecrementes = quantité]
+    F --> H[articlesDecrementes = 0]
+    G --> I[Retour quantité achetée]
+    H --> I
+</div>
+            <div class="code-block">
+```cpp
+// AccesBD - Gestion achat
+int requeteAchatArticle(int id, int quantite) {
+    ARTICLE tmp = requeteSqlArticle(id);
+    int articlesDecrementes = 0;
+    if (tmp.stock >= quantite) {
+        int nouveauStock = tmp.stock - quantite;
+        sprintf(requete, "UPDATE UNIX_FINAL SET stock = %d WHERE id = %d;", nouveauStock, id);
+        if (mysql_query(connexion, requete) != 0) {
+            fprintf(stderr, "Erreur de mise à jour du stock: %s\n", mysql_error(connexion));
+            return 0;
+        }
+        articlesDecrementes = quantite;
+    }
+    return articlesDecrementes;
+}
+```
+            </div>
+        </div>
+        <div class="section">
+            <h2>🔍 ANALYSE COMPARATIVE : SPÉCIFICATION vs IMPLÉMENTATION</h2>
+            <h3>✅ Points conformes à la spécification</h3>
+            <ul class="check-list">
+                <li><strong>Envoi requête ACHAT</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>Récupération quantité via getQuantite()</li>
+                        <li>Envoi ACHAT avec id article et quantité</li>
+                        <li>Transfert via serveur vers bon Caddie</li>
+                    </ul>
+                </li>
+                <li><strong>Gestion des stocks</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>Vérification stock suffisant</li>
+                        <li>Mise à jour atomique (tout ou rien)</li>
+                        <li>Retour quantité réellement achetée</li>
+                    </ul>
+                </li>
+                <li><strong>Stockage dans Caddie</strong> : ✅ Implémenté correctement
+                    <ul>
+                        <li>Vecteur articles[10] dans Caddie</li>
+                        <li>Variable nbArticles</li>
+                        <li>Ajout uniquement si achat réussi</li>
+                    </ul>
+                </li>
+                <li><strong>Mise à jour panier client</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>Envoi CADDIE après achat réussi</li>
+                        <li>Vidage table panier avant mise à jour</li>
+                        <li>Réinitialisation totalCaddie</li>
+                    </ul>
+                </li>
+                <li><strong>Affichage interface</strong> : ✅ Implémenté correctement
+                    <ul>
+                        <li>Messages de succès/échec</li>
+                        <li>Mise à jour table panier</li>
+                        <li>Calcul et affichage total</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <div class="section">
+            <h2>🔧 Détails d'implémentation notables</h2>
+            <h3>Structure de données panier</h3>
+            <div class="code-block">
+```cpp
+// Caddie - Stockage local
+ARTICLE articles[10];  // Maximum 10 articles différents
+int nbArticles = 0;    // Nombre d'articles actuels
+// Client - Affichage uniquement
+float totalCaddie = 0.0;  // Total à payer
+```
+            </div>
+            <h3>Gestion des erreurs</h3>
+            <div class="code-block">
+```cpp
+// Vérification capacité panier
+if (nbArticles >= 10) {
+    fprintf(stderr, "Erreur : le tableau d'articles est plein.\n");
+    exit(1);
+}
+// Gestion erreur base de données
+if (mysql_query(connexion, requete) != 0) {
+    fprintf(stderr, "Erreur de mise à jour du stock: %s\n", mysql_error(connexion));
+    return 0; // Aucun article acheté
+}
+```
+            </div>
+            <h3>Communication asynchrone</h3>
+            <div class="code-block">
+```cpp
+// Envoi multiple d'articles
+for(int i = 0; i < nbArticles; i++) {
+    // Préparation message article
+    msgsnd(idQ, pM, sizeof(MESSAGE) - sizeof(long), 0);
+    kill(pidClient, SIGUSR1);  // Notification pour chaque article
+}
+```
+            </div>
+        </div>
+        <div class="section">
+            <h2>📈 PARCOURS UTILISATEUR COMPLET</h2>
+            <div class="user-journey">
+                <h3>1. Sélection et achat d'article</h3>
+                <ul class="flow-list">
+                    <li>Client consulte article (CONSULT)</li>
+                    <li>Client sélectionne quantité</li>
+                    <li>Clic sur "Acheter"</li>
+                    <li>Envoi ACHAT(id, quantité) au serveur</li>
+                    <li>Transfert vers Caddie</li>
+                    <li>Envoi via pipe vers AccesBD</li>
+                </ul>
+            </div>
+            <div class="user-journey">
+                <h3>2. Traitement de l'achat</h3>
+                <ul class="flow-list">
+                    <li>AccesBD vérifie stock disponible</li>
+                    <li>Si suffisant : UPDATE stock = stock - quantité</li>
+                    <li>Si insuffisant : Pas de modification</li>
+                    <li>Retour quantité réellement achetée</li>
+                    <li>Réponse vers Caddie</li>
+                </ul>
+            </div>
+            <div class="user-journey">
+                <h3>3. Stockage et notification</h3>
+                <ul class="flow-list">
+                    <li>Caddie reçoit réponse</li>
+                    <li>Si achat réussi : stockeArticle() dans vecteur</li>
+                    <li>Transmission résultat au client</li>
+                    <li>Client affiche message de succès/échec</li>
+                </ul>
+            </div>
+            <div class="user-journey">
+                <h3>4. Mise à jour du panier</h3>
+                <ul class="flow-list">
+                    <li>Si achat réussi : client envoie CADDIE</li>
+                    <li>Client vide table panier et totalCaddie</li>
+                    <li>Caddie envoie tous les articles du vecteur</li>
+                    <li>Client reconstruit affichage panier</li>
+                    <li>Calcul et affichage nouveau total</li>
+                </ul>
+            </div>
+        </div>
+        <div class="section">
+            <h2>🎯 SYNTHÈSE FINALE</h2>
+            <div class="highlight">
+                <p>Cette étape implémente un <strong>système d'achat complet</strong> avec :</p>
+                <ul class="check-list">
+                    <li><strong>Gestion des stocks</strong> : Vérification et mise à jour atomique</li>
+                    <li><strong>Stockage sécurisé</strong> : Panier dans le processus Caddie</li>
+                    <li><strong>Interface réactive</strong> : Messages et mise à jour en temps réel</li>
+                    <li><strong>Communication robuste</strong> : Gestion des erreurs et timeouts</li>
+                    <li><strong>Cohérence des données</strong> : Synchronisation client-serveur-caddie</li>
+                </ul>
+                <p>Le système garantit une <strong>expérience utilisateur fluide</strong> avec des <strong>stocks cohérents</strong> et une <strong>gestion robuste des erreurs</strong>.</p>
+                <p><strong>Points forts :</strong><br>
+                - <strong>Sécurité</strong> : Stockage panier côté serveur<br>
+                - <strong>Performance</strong> : Communication optimisée via pipe<br>
+                - <strong>Fiabilité</strong> : Gestion atomique des transactions<br>
+                - <strong>Interface</strong> : Feedback utilisateur en temps réel<br>
+                - <strong>Scalabilité</strong> : Support de multiples clients simultanés</p>
+            </div>
+        </div>
+    </div>
+    <script>mermaid.initialize({ startOnLoad: true });</script>
+</body>
+</html> 

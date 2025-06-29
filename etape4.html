@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Étape 4 - Accès unique à la base de données et création d'un pipe</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header { text-align: center; margin-bottom: 40px; color: #333; }
+        .header h1 { font-size: 2.5rem; margin-bottom: 10px; color: #667eea; }
+        .header .subtitle { font-size: 1.2rem; color: #666; }
+        .back-button {
+            position: fixed; top: 20px; left: 20px;
+            background: #667eea; color: white; padding: 10px 20px;
+            border-radius: 25px; text-decoration: none; font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .back-button:hover { background: #5a6fd8; transform: translateY(-2px); }
+        .section {
+            margin-bottom: 40px; padding: 20px;
+            border-left: 4px solid #667eea; background: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+        }
+        .section h2 { color: #333; margin-bottom: 15px; font-size: 1.8rem; }
+        .section h3 { color: #555; margin: 20px 0 10px 0; font-size: 1.4rem; }
+        .code-block {
+            background: #2d3748; color: #e2e8f0; padding: 20px;
+            border-radius: 8px; overflow-x: auto; margin: 15px 0;
+            font-family: 'Courier New', monospace; font-size: 0.95rem;
+        }
+        .mermaid {
+            text-align: center; margin: 20px 0; background: white;
+            padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;
+        }
+        .flow-list, .check-list { list-style: none; padding-left: 0; }
+        .flow-list li, .check-list li {
+            padding: 8px 0; border-bottom: 1px solid #e2e8f0;
+            position: relative; padding-left: 30px;
+        }
+        .flow-list li::before { content: '→'; position: absolute; left: 0; color: #667eea; font-weight: bold; }
+        .check-list li::before { content: '✅'; position: absolute; left: 0; }
+        .structure-box {
+            background: #e8f4fd; border: 1px solid #bee3f8;
+            border-radius: 8px; padding: 15px; margin: 15px 0;
+        }
+        .structure-box h4 { color: #2b6cb0; margin-bottom: 10px; }
+        .highlight {
+            background: #fff3cd; border: 1px solid #ffeaa7;
+            border-radius: 4px; padding: 10px; margin: 10px 0;
+        }
+        .user-journey {
+            background: #f0fff4; border: 1px solid #9ae6b4;
+            border-radius: 8px; padding: 20px; margin: 20px 0;
+        }
+        .user-journey h3 { color: #22543d; margin-bottom: 15px; }
+        .step-number {
+            display: inline-block; background: #667eea; color: white;
+            width: 25px; height: 25px; border-radius: 50%; text-align: center;
+            line-height: 25px; margin-right: 10px; font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">← Retour</a>
+    <div class="container">
+        <div class="header">
+            <h1>📋 SYNTHÈSE COMPLÈTE - ÉTAPE 4</h1>
+            <p class="subtitle">ACCÈS UNIQUE À LA BASE DE DONNÉES ET CRÉATION D'UN PIPE</p>
+        </div>
+        <div class="section">
+            <h2>🎯 Objectif de cette étape</h2>
+            <p>Cette étape optimise l'architecture en <strong>centralisant l'accès à la base de données</strong> via un processus unique <code>AccesBD</code>. Cela évite les connexions multiples et les accès concurrents qui pourraient rendre les stocks inconsistants.</p>
+        </div>
+        <div class="section">
+            <h2>🔄 Architecture optimisée du système</h2>
+            <h3>Schéma global du système</h3>
+            <div class="mermaid">
+graph TB
+    C1[Client 1] --> S[Serveur]
+    C2[Client 2] --> S
+    C3[Client N] --> S
+    S --> Ca1[Caddie 1]
+    S --> Ca2[Caddie 2]
+    S --> Ca3[Caddie N]
+    Ca1 --> P[Pipe]
+    Ca2 --> P
+    Ca3 --> P
+    P --> AB[AccesBD]
+    AB --> BD[Base de données MySQL]
+    subgraph "Communication"
+        Ca1 -.->|CONSULT via pipe| AB
+        Ca2 -.->|CONSULT via pipe| AB
+        Ca3 -.->|CONSULT via pipe| AB
+        AB -.->|Réponse via file| Ca1
+        AB -.->|Réponse via file| Ca2
+        AB -.->|Réponse via file| Ca3
+    end
+    subgraph "Ressources"
+        S -->|Création| P
+        S -->|Création| AB
+        S -->|Création| Ca1
+        S -->|Création| Ca2
+        S -->|Création| Ca3
+    end
+</div>
+        </div>
+        <div class="section">
+            <h2>📊 ANALYSE DU CODE IMPLÉMENTÉ</h2>
+            <h3>1. Création du pipe dans le serveur</h3>
+            <div class="code-block">
+```cpp
+// Serveur - Création pipe
+if(pipe(fdPipe) == -1) {
+    perror("(SERVEUR) échec de création du pipe\n");
+    exit(1);
+}
+
+// Serveur - Création AccesBD avec descripteur lecture
+sprintf(buffer,"%d", fdPipe[0]);
+procAccesBd = creerProcessusFils(2,"./AccesBD", "AccesBD", buffer ,NULL);
+
+// Serveur - Création Caddie avec descripteur écriture
+sprintf(buffer, "%d", fdPipe[1]);
+tab->connexions[i].pidCaddie = creerProcessusFils(2,"./Caddie", "Caddie", buffer,NULL);
+```
+            </div>
+            <h3>2. Création du processus AccesBD</h3>
+            <div class="code-block">
+```cpp
+// AccesBD - Lecture pipe et traitement
+while(1) {
+    int lecture = read(fdRpipe, &m, sizeof(MESSAGE));
+    if (lecture == 0) {
+        // Fin de communication
+        mysql_close(connexion);
+        exit(1);
+    }
+    case CONSULT:
+        aEnvoyer = requeteSqlArticle(m.data1);
+        // Préparation réponse
+        reponse.type = m.expediteur;  // PID du Caddie
+        reponse.expediteur = getpid();
+        reponse.requete = CONSULT;
+        if (aEnvoyer.stock == -1) {
+            reponse.data1 = -1;  // Article non trouvé
+        } else {
+            // Remplissage données article
+            reponse.data1 = aEnvoyer.id;
+            strcpy(reponse.data2, aEnvoyer.intitule);
+            // ...
+        }
+        msgsnd(idQ, &reponse, sizeof(MESSAGE) - sizeof(long), 0);
+}
+```
+            </div>
+            <h3>3. Passage du descripteur pipe au Caddie lors du login</h3>
+            <div class="code-block">
+```cpp
+// Serveur - Création Caddie avec descripteur écriture
+sprintf(buffer, "%d", fdPipe[1]);
+tab->connexions[i].pidCaddie = creerProcessusFils(2,"./Caddie", "Caddie", buffer,NULL);
+```
+            </div>
+            <h3>4. Processus Caddie - Communication via pipe</h3>
+            <div class="code-block">
+```cpp
+// Caddie - Envoi via pipe
+void wPipe(MESSAGE* pM) {
+    pM->expediteur = getpid();  // Remplace par PID Caddie
+    write(fdWpipe, pM, sizeof(MESSAGE));  // Envoi vers AccesBD
+    msgrcv(idQ,pM,sizeof(MESSAGE)-sizeof(long),getpid(),0);  // Attente réponse
+}
+```
+            </div>
+            <h3>5. Processus AccesBD - Gestion des requêtes</h3>
+            <div class="code-block">
+```cpp
+// AccesBD - Lecture pipe et traitement
+while(1) {
+    int lecture = read(fdRpipe, &m, sizeof(MESSAGE));
+    if (lecture == 0) {
+        // Fin de communication
+        mysql_close(connexion);
+        exit(1);
+    }
+    // ... traitement des requêtes ...
+}
+```
+            </div>
+        </div>
+        <div class="section">
+            <h2>📊 SCHÉMAS DE COMMUNICATION DÉTAILLÉS</h2>
+            <h3>1. Initialisation du système avec pipe</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant S as Serveur
+    participant P as Pipe
+    participant AB as AccesBD
+    participant Ca as Caddie
+
+    Note over S: Démarrage serveur
+    S->>P: pipe(fdPipe)
+    Note over S: fdPipe[0] = lecture, fdPipe[1] = écriture
+    S->>AB: creerProcessusFils("./AccesBD", fdPipe[0])
+    Note over AB: Récupération fdPipe[0]
+    Note over AB: Connexion MySQL
+    Note over AB: Boucle de lecture pipe
+    Note over S: Login client réussi
+    S->>Ca: creerProcessusFils("./Caddie", fdPipe[1])
+    Note over Ca: Récupération fdPipe[1]
+    Note over Ca: Pas de connexion MySQL
+</div>
+            <div class="code-block">
+```cpp
+// Serveur - Création pipe
+if(pipe(fdPipe) == -1) {
+    perror("(SERVEUR) échec de création du pipe\n");
+    exit(1);
+}
+// Serveur - Création AccesBD avec descripteur lecture
+sprintf(buffer,"%d", fdPipe[0]);
+procAccesBd = creerProcessusFils(2,"./AccesBD", "AccesBD", buffer ,NULL);
+// Serveur - Création Caddie avec descripteur écriture
+sprintf(buffer, "%d", fdPipe[1]);
+tab->connexions[i].pidCaddie = creerProcessusFils(2,"./Caddie", "Caddie", buffer,NULL);
+```
+            </div>
+            <h3>2. Consultation d'article via pipe</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant C as Client
+    participant S as Serveur
+    participant Ca as Caddie
+    participant P as Pipe
+    participant AB as AccesBD
+    participant BD as Base de données
+
+    C->>S: CONSULT (data1=1)
+    S->>Ca: CONSULT (data1=1)
+    Ca->>Ca: m.expediteur = getpid()
+    Ca->>P: write(CONSULT)
+    P->>AB: read(CONSULT)
+    AB->>BD: SELECT * FROM UNIX_FINAL WHERE id=1
+    BD-->>AB: Article "carottes"
+    AB->>AB: Préparation réponse
+    AB->>Ca: msgsnd(réponse)
+    Ca->>C: Article
+    Ca->>C: SIGUSR1
+</div>
+            <div class="code-block">
+```cpp
+// Caddie - Envoi via pipe
+void wPipe(MESSAGE* pM) {
+    pM->expediteur = getpid();  // Remplace par PID Caddie
+    write(fdWpipe, pM, sizeof(MESSAGE));  // Envoi vers AccesBD
+    msgrcv(idQ,pM,sizeof(MESSAGE)-sizeof(long),getpid(),0);  // Attente réponse
+}
+// AccesBD - Lecture pipe et traitement
+while(1) {
+    int lecture = read(fdRpipe, &m, sizeof(MESSAGE));
+    if (lecture == 0) {
+        // Fin de communication
+        mysql_close(connexion);
+        exit(1);
+    }
+    case CONSULT:
+        aEnvoyer = requeteSqlArticle(m.data1);
+        // Préparation réponse
+        reponse.type = m.expediteur;  // PID du Caddie
+        reponse.expediteur = getpid();
+        reponse.requete = CONSULT;
+        if (aEnvoyer.stock == -1) {
+            reponse.data1 = -1;  // Article non trouvé
+        } else {
+            // Remplissage données article
+            reponse.data1 = aEnvoyer.id;
+            strcpy(reponse.data2, aEnvoyer.intitule);
+            // ...
+        }
+        msgsnd(idQ, &reponse, sizeof(MESSAGE) - sizeof(long), 0);
+}
+```
+            </div>
+            <h3>3. Gestion de la fin de communication</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant S as Serveur
+    participant P as Pipe
+    participant AB as AccesBD
+    participant Ca as Caddie
+
+    Note over S: CTRL-C reçu
+    S->>S: handlerSIGINT()
+    S->>AB: kill(SIGINT)
+    S->>P: close(fdPipe[0])
+    S->>P: close(fdPipe[1])
+    Note over AB: read() retourne 0
+    AB->>AB: mysql_close()
+    AB->>AB: exit(1)
+    Note over Ca: write() échoue
+    Ca->>Ca: exit(1)
+</div>
+            <div class="code-block">
+```cpp
+// Serveur - Handler SIGINT
+void handlerSIGINT(int sig) {
+    kill(tab->pidPublicite, SIGINT);
+    kill(tab->pidAccesBD, SIGINT);
+    // Fermeture du pipe
+    if (close(fdPipe[0]) == -1) {
+        perror("Erreur fermeture sortie du pipe");
+        exit(1);
+    }
+    if (close(fdPipe[1]) == -1) {
+        perror("Erreur fermeture entrée du pipe");
+        exit(1);
+    }
+}
+// AccesBD - Détection fin communication
+while(1) {
+    int lecture = read(fdRpipe, &m, sizeof(MESSAGE));
+    if (lecture == 0) {
+        fprintf(stderr, "(ACCESBD) Fin de la communication par le pipe\n");
+        mysql_close(connexion);
+        exit(1);
+    }
+}
+```
+            </div>
+        </div>
+        <div class="section">
+            <h2>🔍 ANALYSE COMPARATIVE : SPÉCIFICATION vs IMPLÉMENTATION</h2>
+            <h3>✅ Points conformes à la spécification</h3>
+            <ul class="check-list">
+                <li><strong>Création du pipe</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>Création lors de l'initialisation du serveur</li>
+                        <li>Fermeture dans handler SIGINT</li>
+                        <li>Passage descripteurs aux processus enfants</li>
+                    </ul>
+                </li>
+                <li><strong>Processus AccesBD unique</strong> : ✅ Implémenté correctement
+                    <ul>
+                        <li>Création par le serveur au démarrage</li>
+                        <li>Connexion unique à MySQL</li>
+                        <li>Boucle de lecture sur le pipe</li>
+                        <li>Détection fin de communication</li>
+                    </ul>
+                </li>
+                <li><strong>Communication Caddie ↔ AccesBD</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>Envoi via pipe (Caddie → AccesBD)</li>
+                        <li>Réponse via file de messages (AccesBD → Caddie)</li>
+                        <li>Modification expediteur dans message</li>
+                    </ul>
+                </li>
+                <li><strong>Gestion des erreurs</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>Article non trouvé : data1 = -1</li>
+                        <li>Détection fin communication : read() = 0</li>
+                        <li>Fermeture propre des ressources</li>
+                    </ul>
+                </li>
+                <li><strong>Architecture centralisée</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>Un seul processus AccesBD</li>
+                        <li>Pas de connexions multiples à MySQL</li>
+                        <li>Évitement des accès concurrents</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <div class="section">
+            <h2>🔧 Détails d'implémentation notables</h2>
+            <h3>Structure de communication</h3>
+            <div class="code-block">
+```cpp
+// Flux de données
+Client → Serveur → Caddie → Pipe → AccesBD → MySQL
+MySQL → AccesBD → File de messages → Caddie → Client
+// Descripteurs pipe
+fdPipe[0] : Lecture (AccesBD)
+fdPipe[1] : Écriture (Caddies)
+```
+            </div>
+            <h3>Gestion des processus</h3>
+            <div class="code-block">
+```cpp
+// Serveur - Table des connexions mise à jour
+typedef struct {
+    int   pidServeur;
+    int   pidPublicite;
+    int   pidAccesBD;      // Nouveau champ
+    CONNEXION connexions[6];
+} TAB_CONNEXIONS;
+```
+            </div>
+            <h3>Sécurisation des chaînes</h3>
+            <div class="code-block">
+```cpp
+// AccesBD - Sécurisation des chaînes
+strncpy(tmp.intitule, ligne[1], sizeof(tmp.intitule) - 1);
+tmp.intitule[sizeof(tmp.intitule) - 1] = '\0';
+```
+            </div>
+        </div>
+        <div class="section">
+            <h2>📈 PARCOURS UTILISATEUR COMPLET</h2>
+            <div class="user-journey">
+                <h3>1. Démarrage du système</h3>
+                <ul class="flow-list">
+                    <li>Serveur démarre</li>
+                    <li>Création pipe (fdPipe[0], fdPipe[1])</li>
+                    <li>Lancement processus AccesBD avec fdPipe[0]</li>
+                    <li>AccesBD se connecte à MySQL</li>
+                    <li>AccesBD entre en boucle de lecture pipe</li>
+                </ul>
+            </div>
+            <div class="user-journey">
+                <h3>2. Connexion d'un client</h3>
+                <ul class="flow-list">
+                    <li>Client se connecte et s'authentifie</li>
+                    <li>Serveur crée processus Caddie avec fdPipe[1]</li>
+                    <li>Caddie récupère descripteur écriture</li>
+                    <li>Caddie n'a plus de connexion MySQL</li>
+                    <li>Client envoie CONSULT(1)</li>
+                </ul>
+            </div>
+            <div class="user-journey">
+                <h3>3. Consultation d'article</h3>
+                <ul class="flow-list">
+                    <li>Serveur transfère CONSULT vers Caddie</li>
+                    <li>Caddie modifie expediteur = getpid()</li>
+                    <li>Caddie écrit message sur pipe</li>
+                    <li>AccesBD lit message du pipe</li>
+                    <li>AccesBD interroge MySQL</li>
+                    <li>AccesBD envoie réponse via file de messages</li>
+                    <li>Caddie reçoit réponse et la transmet au client</li>
+                </ul>
+            </div>
+            <div class="user-journey">
+                <h3>4. Fermeture du système</h3>
+                <ul class="flow-list">
+                    <li>CTRL-C sur serveur</li>
+                    <li>Serveur ferme pipe (fdPipe[0], fdPipe[1])</li>
+                    <li>AccesBD détecte fin communication (read() = 0)</li>
+                    <li>AccesBD ferme connexion MySQL et exit</li>
+                    <li>Caddies échouent sur write() et exit</li>
+                    <li>Nettoyage complet des ressources</li>
+                </ul>
+            </div>
+        </div>
+        <div class="section">
+            <h2>🎯 SYNTHÈSE FINALE</h2>
+            <div class="highlight">
+                <p>Cette étape optimise l'architecture en <strong>centralisant l'accès à la base de données</strong> avec :</p>
+                <ul class="check-list">
+                    <li><strong>Accès unique à MySQL</strong> : Un seul processus AccesBD</li>
+                    <li><strong>Communication via pipe</strong> : Transfert efficace des requêtes</li>
+                    <li><strong>Évitement des accès concurrents</strong> : Pas de conflits sur les stocks</li>
+                    <li><strong>Gestion robuste des erreurs</strong> : Détection fin de communication</li>
+                    <li><strong>Architecture scalable</strong> : Support de multiples clients</li>
+                    <li><strong>Nettoyage propre</strong> : Fermeture automatique des ressources</li>
+                </ul>
+                <p>Le système garantit maintenant une <strong>cohérence des données</strong> et une <strong>performance optimisée</strong> en évitant les connexions multiples à la base de données.</p>
+                <p><strong>Avantages de cette architecture :</strong><br>
+                - <strong>Cohérence</strong> : Accès sérialisé à la base de données<br>
+                - <strong>Performance</strong> : Réduction du nombre de connexions MySQL<br>
+                - <strong>Robustesse</strong> : Gestion centralisée des erreurs<br>
+                - <strong>Scalabilité</strong> : Support de nombreux clients simultanés<br>
+                - <strong>Maintenabilité</strong> : Logique d'accès BD centralisée</p>
+            </div>
+        </div>
+    </div>
+    <script>mermaid.initialize({ startOnLoad: true });</script>
+</body>
+</html> 

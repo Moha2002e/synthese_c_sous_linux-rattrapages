@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Étape 2 - Système de publicité en temps réel</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header { text-align: center; margin-bottom: 40px; color: #333; }
+        .header h1 { font-size: 2.5rem; margin-bottom: 10px; color: #667eea; }
+        .header .subtitle { font-size: 1.2rem; color: #666; }
+        .back-button {
+            position: fixed; top: 20px; left: 20px;
+            background: #667eea; color: white; padding: 10px 20px;
+            border-radius: 25px; text-decoration: none; font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .back-button:hover { background: #5a6fd8; transform: translateY(-2px); }
+        .section {
+            margin-bottom: 40px; padding: 20px;
+            border-left: 4px solid #667eea; background: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+        }
+        .section h2 { color: #333; margin-bottom: 15px; font-size: 1.8rem; }
+        .section h3 { color: #555; margin: 20px 0 10px 0; font-size: 1.4rem; }
+        .code-block {
+            background: #2d3748; color: #e2e8f0; padding: 20px;
+            border-radius: 8px; overflow-x: auto; margin: 15px 0;
+            font-family: 'Courier New', monospace; font-size: 0.95rem;
+        }
+        .mermaid {
+            text-align: center; margin: 20px 0; background: white;
+            padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;
+        }
+        .flow-list, .check-list { list-style: none; padding-left: 0; }
+        .flow-list li, .check-list li {
+            padding: 8px 0; border-bottom: 1px solid #e2e8f0;
+            position: relative; padding-left: 30px;
+        }
+        .flow-list li::before { content: '→'; position: absolute; left: 0; color: #667eea; font-weight: bold; }
+        .check-list li::before { content: '✅'; position: absolute; left: 0; }
+        .structure-box {
+            background: #e8f4fd; border: 1px solid #bee3f8;
+            border-radius: 8px; padding: 15px; margin: 15px 0;
+        }
+        .structure-box h4 { color: #2b6cb0; margin-bottom: 10px; }
+        .highlight {
+            background: #fff3cd; border: 1px solid #ffeaa7;
+            border-radius: 4px; padding: 10px; margin: 10px 0;
+        }
+        .user-journey {
+            background: #f0fff4; border: 1px solid #9ae6b4;
+            border-radius: 8px; padding: 20px; margin: 20px 0;
+        }
+        .user-journey h3 { color: #22543d; margin-bottom: 15px; }
+        .step-number {
+            display: inline-block; background: #667eea; color: white;
+            width: 25px; height: 25px; border-radius: 50%; text-align: center;
+            line-height: 25px; margin-right: 10px; font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">← Retour</a>
+    <div class="container">
+        <div class="header">
+            <h1>📋 SYNTHÈSE COMPLÈTE - ÉTAPE 2</h1>
+            <p class="subtitle">SYSTÈME DE PUBLICITÉ EN TEMPS RÉEL</p>
+        </div>
+        <div class="section">
+            <h2>🎯 Objectif de cette étape</h2>
+            <p>Cette étape implémente un <strong>système de publicité dynamique</strong> qui affiche des messages publicitaires défilants dans toutes les fenêtres client connectées, même sans authentification.</p>
+        </div>
+        <div class="section">
+            <h2>🔄 Architecture du système de publicité</h2>
+            <h3>Schéma global du système</h3>
+            <div class="mermaid">
+graph TB
+    S[Serveur] --> SHM[Memory Shared<br/>52 caractères]
+    S --> P[Processus Publicite]
+    P --> SHM
+    P --> S
+    S --> C1[Client 1]
+    S --> C2[Client 2]
+    S --> C3[Client N]
+    C1 --> SHM
+    C2 --> SHM
+    C3 --> SHM
+    subgraph "Mémoire Partagée"
+        SHM
+    end
+    subgraph "Communication"
+        P -.->|UPDATE_PUB| S
+        S -.->|SIGUSR2| C1
+        S -.->|SIGUSR2| C2
+        S -.->|SIGUSR2| C3
+    end
+</div>
+        </div>
+        <div class="section">
+            <h2>📊 ANALYSE DU CODE IMPLÉMENTÉ</h2>
+            <h3>1. Création de la mémoire partagée (Serveur)</h3>
+            <div class="code-block">
+```cpp
+// Serveur - Création mémoire partagée
+if ((idShm = shmget(CLE, 52, IPC_CREAT | IPC_EXCL | 0777)) == -1) {
+    perror("Erreur de création de la mémoire partagée");
+    exit(1);
+}
+
+// Serveur - Lancement processus Publicite
+lancementPub = creerProcessusFils(1,"./Publicite", "Publicite",NULL,NULL);
+tab->pidPublicite = lancementPub;
+
+// Publicite - Attachement mémoire partagée
+if ((pShm = (char*)shmat(idShm,NULL,0)) == (char*)-1) {
+    perror("Erreur de shmat");
+    exit(1);
+}
+```
+            </div>
+            <h3>2. Traitement UPDATE_PUB dans le serveur</h3>
+            <div class="code-block">
+```cpp
+// Serveur - Traitement UPDATE_PUB
+case UPDATE_PUB:
+    for(int i = 0; i < 6; i++) {
+        if(tab->connexions[i].pidFenetre > 0) {
+            kill(tab->connexions[i].pidFenetre, SIGUSR2);
+        }
+    }
+    break;
+```
+            </div>
+            <h3>3. Processus Publicite</h3>
+            <div class="code-block">
+```cpp
+// Publicite - Boucle principale
+while(1) {
+    // Envoi UPDATE_PUB au serveur
+    if (msgsnd(idQ, &requete, sizeof(MESSAGE) - sizeof(long), 0) == -1) {
+        perror("Erreur lors de l'envoie de la requete UPDATE_PUB");
+        exit(1);
+    }
+    sleep(1);
+    // Rotation de la publicité
+    char premierChar = pShm[0];
+    for (int i = 0; i < 50; i++) {
+        pShm[i] = pShm[i + 1];
+    }
+    pShm[50] = premierChar;
+    pShm[51] = '\0';
+}
+```
+            </div>
+            <h3>4. Client - Gestion de la mémoire partagée et SIGUSR2</h3>
+            <div class="code-block">
+```cpp
+// Client - Handler SIGUSR2
+void handlerSIGUSR2(int sig) {
+    if (pShm != NULL) {
+        char publicite[51];
+        strncpy(publicite, pShm, 50);
+        publicite[51] = '\0';
+        w->setPublicite(publicite);
+    }
+}
+```
+            </div>
+        </div>
+        <div class="section">
+            <h2>📊 SCHÉMAS DE COMMUNICATION DÉTAILLÉS</h2>
+            <h3>1. Initialisation du système de publicité</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant S as Serveur
+    participant SHM as Mémoire Partagée
+    participant P as Processus Publicite
+    participant C as Client
+
+    Note over S: Démarrage serveur
+    S->>SHM: shmget(CLE, 52, IPC_CREAT|IPC_EXCL|0777)
+    S->>P: creerProcessusFils("./Publicite")
+    P->>SHM: shmget(CLE, 0, 0)
+    P->>SHM: shmat(idShm, NULL, 0)
+    P->>SHM: Initialisation publicité "Bienvenue..."
+    Note over P: Boucle infinie de rotation
+</div>
+            <div class="code-block">
+```cpp
+// Serveur - Création mémoire partagée
+if ((idShm = shmget(CLE, 52, IPC_CREAT | IPC_EXCL | 0777)) == -1) {
+    perror("Erreur de création de la mémoire partagée");
+    exit(1);
+}
+// Serveur - Lancement processus Publicite
+lancementPub = creerProcessusFils(1,"./Publicite", "Publicite",NULL,NULL);
+tab->pidPublicite = lancementPub;
+// Publicite - Attachement mémoire partagée
+if ((pShm = (char*)shmat(idShm,NULL,0)) == (char*)-1) {
+    perror("Erreur de shmat");
+    exit(1);
+}
+```
+            </div>
+            <h3>2. Boucle de rotation de la publicité</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant P as Publicite
+    participant S as Serveur
+    participant C1 as Client 1
+    participant C2 as Client 2
+    participant SHM as Mémoire Partagée
+
+    loop Toutes les secondes
+        P->>S: UPDATE_PUB
+        S->>C1: SIGUSR2
+        S->>C2: SIGUSR2
+        C1->>SHM: Lecture publicité
+        C2->>SHM: Lecture publicité
+        C1->>C1: setPublicite(publicité)
+        C2->>C2: setPublicite(publicité)
+        P->>SHM: Rotation caractères
+        Note over P: sleep(1)
+    end
+</div>
+            <div class="code-block">
+```cpp
+// Publicite - Boucle principale
+while(1) {
+    // Envoi UPDATE_PUB au serveur
+    if (msgsnd(idQ, &requete, sizeof(MESSAGE) - sizeof(long), 0) == -1) {
+        perror("Erreur lors de l'envoie de la requete UPDATE_PUB");
+        exit(1);
+    }
+    sleep(1);
+    // Rotation de la publicité
+    char premierChar = pShm[0];
+    for (int i = 0; i < 50; i++) {
+        pShm[i] = pShm[i + 1];
+    }
+    pShm[50] = premierChar;
+    pShm[51] = '\0';
+}
+// Serveur - Traitement UPDATE_PUB
+case UPDATE_PUB:
+    for(int i = 0; i < 6; i++) {
+        if(tab->connexions[i].pidFenetre > 0) {
+            kill(tab->connexions[i].pidFenetre, SIGUSR2);
+        }
+    }
+    break;
+// Client - Handler SIGUSR2
+void handlerSIGUSR2(int sig) {
+    if (pShm != NULL) {
+        char publicite[51];
+        strncpy(publicite, pShm, 50);
+        publicite[51] = '\0';
+        w->setPublicite(publicite);
+    }
+}
+```
+            </div>
+            <h3>3. Initialisation de la publicité</h3>
+            <div class="mermaid">
+graph LR
+    A[Texte: "Bienvenue sur le site du Maraicher en ligne !"] --> B[Longueur: 42 caractères]
+    B --> C[Calcul position: 25 - 42/2 = 4]
+    C --> D[Complétion avec espaces]
+    D --> E[Mémoire partagée: 52 caractères]
+    subgraph "Mémoire partagée"
+        E
+    end
+</div>
+            <div class="code-block">
+```cpp
+// Initialisation de la publicité
+char pub[51];
+strcpy(pub,"Bienvenue sur le site du Maraicher en ligne !");
+// Remplissage avec espaces
+for (int i=0 ; i<=50 ; i++) pShm[i] = ' ';
+pShm[51] = '\0';
+// Centrage du texte
+int indDebut = 25 - strlen(pub)/2;
+for (int i=0 ; i<strlen(pub) ; i++) {
+    pShm[indDebut + i] = pub[i];
+}
+```
+            </div>
+        </div>
+        <div class="section">
+            <h2>🔍 ANALYSE COMPARATIVE : SPÉCIFICATION vs IMPLÉMENTATION</h2>
+            <h3>✅ Points conformes à la spécification</h3>
+            <ul class="check-list">
+                <li><strong>Mémoire partagée</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>Taille exacte de 52 caractères (51 + '\0')</li>
+                        <li>Même clé que la file de messages (CLE)</li>
+                        <li>Création par le serveur, suppression dans handler SIGINT</li>
+                    </ul>
+                </li>
+                <li><strong>Processus Publicite</strong> : ✅ Implémenté correctement
+                    <ul>
+                        <li>Création par le serveur au démarrage</li>
+                        <li>Attachement à la mémoire partagée</li>
+                        <li>Initialisation avec texte centré et complétion espaces</li>
+                        <li>Boucle de rotation toutes les secondes</li>
+                    </ul>
+                </li>
+                <li><strong>Communication UPDATE_PUB</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>Envoi UPDATE_PUB au serveur</li>
+                        <li>Serveur envoie SIGUSR2 à tous les clients connectés</li>
+                        <li>Pas besoin de connaître les PID des clients</li>
+                    </ul>
+                </li>
+                <li><strong>Client - Gestion SIGUSR2</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>Armement du signal SIGUSR2</li>
+                        <li>Lecture mémoire partagée en lecture seule</li>
+                        <li>Affichage via setPublicite()</li>
+                    </ul>
+                </li>
+                <li><strong>Rotation circulaire</strong> : ✅ Implémentée correctement
+                    <ul>
+                        <li>Décalage vers la gauche avec rotation</li>
+                        <li>Préservation du '\0' en position 51</li>
+                        <li>Caractère sortant réintègre par la droite</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <div class="section">
+            <h2>🔧 Détails d'implémentation notables</h2>
+            <h3>Structure de la mémoire partagée</h3>
+            <div class="code-block">
+```cpp
+// 52 caractères : 51 caractères + '\0'
+char *pShm;  // Pointeur vers la mémoire partagée
+// Format : [caractères...]['\0']
+// Exemple : "    Bienvenue sur le site du Maraicher en ligne !    \0"
+```
+            </div>
+            <h3>Gestion des signaux</h3>
+            <div class="code-block">
+```cpp
+// Publicite - Masquage des signaux sauf SIGUSR1
+sigset_t mask;
+sigfillset(&mask);
+sigdelset(&mask,SIGUSR1);
+sigprocmask(SIG_SETMASK,&mask,NULL);
+// Client - Armement SIGUSR2
+struct sigaction B;
+B.sa_handler = handlerSIGUSR2;
+sigemptyset(&B.sa_mask);
+B.sa_flags = 0;
+sigaction(SIGUSR2,&B,NULL);
+```
+            </div>
+            <h3>Attachement mémoire partagée</h3>
+            <div class="code-block">
+```cpp
+// Publicite - Lecture/Écriture
+pShm = (char*)shmat(idShm,NULL,0);
+// Client - Lecture seule
+pShm = (char*)shmat(idShm,NULL,SHM_RDONLY);
+```
+            </div>
+        </div>
+        <div class="section">
+            <h2>📈 PARCOURS UTILISATEUR COMPLET</h2>
+            <div class="user-journey">
+                <h3>1. Démarrage du système</h3>
+                <ul class="flow-list">
+                    <li>Serveur démarre</li>
+                    <li>Création mémoire partagée (52 caractères)</li>
+                    <li>Lancement processus Publicite</li>
+                    <li>Initialisation publicité "Bienvenue..."</li>
+                    <li>Début boucle de rotation</li>
+                </ul>
+            </div>
+            <div class="user-journey">
+                <h3>2. Connexion d'un client</h3>
+                <ul class="flow-list">
+                    <li>Client se connecte (CONNECT)</li>
+                    <li>Attachement mémoire partagée en lecture seule</li>
+                    <li>Armement signal SIGUSR2</li>
+                    <li>Réception immédiate des publicités</li>
+                </ul>
+            </div>
+            <div class="user-journey">
+                <h3>3. Affichage publicité en temps réel</h3>
+                <ul class="flow-list">
+                    <li>Publicite envoie UPDATE_PUB au serveur</li>
+                    <li>Serveur envoie SIGUSR2 à tous les clients</li>
+                    <li>Clients lisent mémoire partagée</li>
+                    <li>Affichage publicité dans interface</li>
+                    <li>Rotation d'un caractère vers la gauche</li>
+                    <li>Attente 1 seconde</li>
+                    <li>Répétition</li>
+                </ul>
+            </div>
+            <div class="user-journey">
+                <h3>4. Fermeture du système</h3>
+                <ul class="flow-list">
+                    <li>CTRL-C sur serveur</li>
+                    <li>Handler SIGINT</li>
+                    <li>Envoi SIGINT au processus Publicite</li>
+                    <li>Suppression mémoire partagée</li>
+                    <li>Nettoyage ressources</li>
+                </ul>
+            </div>
+        </div>
+        <div class="section">
+            <h2>🎯 SYNTHÈSE FINALE</h2>
+            <div class="highlight">
+                <p>Cette étape implémente un <strong>système de publicité en temps réel</strong> sophistiqué avec :</p>
+                <ul class="check-list">
+                    <li><strong>Mémoire partagée</strong> : Communication efficace entre processus</li>
+                    <li><strong>Processus dédié</strong> : Publicite gère la rotation indépendamment</li>
+                    <li><strong>Notification automatique</strong> : Tous les clients reçoivent les mises à jour</li>
+                    <li><strong>Rotation circulaire</strong> : Effet visuel dynamique</li>
+                    <li><strong>Gestion robuste</strong> : Nettoyage propre des ressources</li>
+                </ul>
+                <p>Le système fonctionne <strong>même sans authentification</strong> et offre une <strong>expérience utilisateur fluide</strong> avec des publicités qui défilent automatiquement dans toutes les fenêtres connectées.</p>
+                <p><strong>Points forts :</strong><br>
+                - Architecture découplée (Publicite ↔ Serveur ↔ Clients)<br>
+                - Utilisation optimale des IPC Linux<br>
+                - Gestion des signaux pour notifications asynchrones<br>
+                - Mémoire partagée en lecture seule pour les clients</p>
+            </div>
+        </div>
+    </div>
+    <script>mermaid.initialize({ startOnLoad: true });</script>
+</body>
+</html> 
